@@ -73,12 +73,12 @@ jobs:
         run: echo "MY_DATE=$(date +%Y-%m-%d-%H-%M)" >> $GITHUB_ENV
       - name: Build using Maven
         run: mvn --batch-mode --update-snapshots verify
-      - run: mkdir staging && cp target/*.jar staging
+      - run: mkdir develop && cp target/*.jar develop
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v4.6.2
         with:
           name: 'artifact_${{ vars.env_name }}-${{ env.MY_DATE }}'
-          path: staging
+          path: develop
       - run: >-
           echo 'Development Environment Secret is ${{secrets.secret}},
           Environment Variable is ${{ vars.variable }}'
@@ -136,12 +136,12 @@ jobs:
           run: echo "MY_DATE=$(date +%Y-%m-%d-%H-%M)" >> $GITHUB_ENV
         - name: Build using Maven
           run: mvn --batch-mode --update-snapshots verify
-        - run: mkdir staging && cp target/*.jar staging
+        - run: mkdir uat && cp target/*.jar uat
         - name: Upload a Build Artifact
           uses: actions/upload-artifact@v4.6.2
           with:
             name: 'artifact_${{ vars.env_name }}-${{ env.MY_DATE }}'
-            path: staging
+            path: uat
         - run: >-
             echo 'UAT Environment Secret is ${{secrets.secret}}, Environment
             Variable is ${{ vars.variable }}'
@@ -168,12 +168,12 @@ jobs:
         run: echo "MY_DATE=$(date +%Y-%m-%d-%H-%M)" >> $GITHUB_ENV
       - name: Build using Maven
         run: mvn --batch-mode --update-snapshots verify
-      - run: mkdir staging && cp target/*.jar staging
+      - run: mkdir prod && cp target/*.jar prod
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v4.6.2
         with:
           name: 'artifact_${{ vars.env_name }}-${{ env.MY_DATE }}'
-          path: staging
+          path: prod
       - run: >-
           echo 'Prod Environment Secret is ${{secrets.secret}}, Environment
           Variable is ${{ vars.variable }}'
