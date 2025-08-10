@@ -1,145 +1,179 @@
 name: Multi Stage Pipeline
-
 on:
- workflow_dispatch:
-  inputs:
-   BUILD_ENVIRONMENT:
-    type: environment
-    default: dev
-   develop_branch:
-    required: true
-    default: 'development'
-    type: choice
-    options:
-        - development
-        - feature
-        - pre-prod
-        - prod
-   TEST_ENVIRONMENT:
-    type: environment
-    default: staging
-   feature_branch:
-    required: true
-    default: 'feature'
-    type: choice
-    options:
-        - feature
-        - development
-        - pre-prod
-        - prod
-   UAT_ENVIRONMENT:
-    type: environment
-    default: uat
-   pre-prod_branch:
-    required: true
-    #type: string
-    default: 'pre-prod'
-    type: choice
-    options:
-        - pre-prod
-        - development
-        - feature
-        - prod
-   PROD_ENVIRONMENT:
-    type: environment
-    default: prod
-   prod_branch:
-    required: true
-    #type: string
-    default: 'prod'
-    type: choice
-    options:
-        - prod
-        - development
-        - feature
-        - pre-prod
-
+  workflow_dispatch:
+    inputs:
+      BUILD_ENVIRONMENT:
+        type: environment
+        default: dev
+      develop_branch:
+        required: true
+        default: development
+        type: choice
+        options:
+          - development
+          - feature
+          - pre-prod
+          - prod
+      TEST_ENVIRONMENT:
+        type: environment
+        default: staging
+      feature_branch:
+        required: true
+        default: feature
+        type: choice
+        options:
+          - feature
+          - development
+          - pre-prod
+          - prod
+      UAT_ENVIRONMENT:
+        type: environment
+        default: uat
+      pre-prod_branch:
+        required: true
+        default: pre-prod
+        type: choice
+        options:
+          - pre-prod
+          - development
+          - feature
+          - prod
+      PROD_ENVIRONMENT:
+        type: environment
+        default: prod
+      prod_branch:
+        required: true
+        default: prod
+        type: choice
+        options:
+          - prod
+          - development
+          - feature
+          - pre-prod
 jobs:
   Build:
-   runs-on: ubuntu-latest
-   environment: ${{ inputs.BUILD_ENVIRONMENT }}
-   steps:
-    - name: Checkout
-      uses: actions/checkout@v4.2.2
-      with:
-          ref: ${{ github.event.inputs.develop_branch }} # Use the input branch
-    - name: Run script on target branch
-      run: |
-          echo "Development build running on branch: ${{ github.event.inputs.develop_branch }}"
-    - name: Setup Java JDK
-      uses: actions/setup-java@v3.14.1
-      with: 
-       java-version: 17
-       distribution: microsoft
-    - name: Get current date
-      id: date
-      run: echo "MY_DATE=$(date +%Y-%m-%d-%H-%M)" >> $GITHUB_ENV
-    - name: Build using Maven
-      run: mvn --batch-mode --update-snapshots verify
-    - run: mkdir staging && cp target/*.jar staging
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v4.6.2
-      with:
-       name: artifact_${{ vars.env_name }}-${{ env.MY_DATE }}
-       path: staging
-    - run: echo 'Development Environment Secret is ${{secrets.secret}}, Environment Variable is ${{ vars.variable }}'
+    runs-on: ubuntu-latest
+    environment: '${{ inputs.BUILD_ENVIRONMENT }}'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+        with:
+          ref: '${{ github.event.inputs.develop_branch }}'
+      - name: Run script on target branch
+        run: >
+          echo "Development build running on branch: ${{
+          github.event.inputs.develop_branch }}"
+      - name: Setup Java JDK
+        uses: actions/setup-java@v3.14.1
+        with:
+          java-version: 17
+          distribution: microsoft
+      - name: Get current date
+        id: date
+        run: echo "MY_DATE=$(date +%Y-%m-%d-%H-%M)" >> $GITHUB_ENV
+      - name: Build using Maven
+        run: mvn --batch-mode --update-snapshots verify
+      - run: mkdir staging && cp target/*.jar staging
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: 'artifact_${{ vars.env_name }}-${{ env.MY_DATE }}'
+          path: staging
+      - run: >-
+          echo 'Development Environment Secret is ${{secrets.secret}},
+          Environment Variable is ${{ vars.variable }}'
   Test:
-   needs: Build
-   runs-on: ubuntu-latest
-   environment: ${{ inputs.TEST_ENVIRONMENT }}
-   steps:
-    - name: Checkout
-      uses: actions/checkout@v4.2.2
-      with:
-          ref: ${{ github.event.inputs.feature_branch }} # Use the input branch
-    - name: Run script on target branch
-      run: |
+    needs: Build
+    runs-on: ubuntu-latest
+    environment: '${{ inputs.TEST_ENVIRONMENT }}'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+        with:
+          ref: '${{ github.event.inputs.feature_branch }}'
+      - name: Run script on target branch
+        run: |
           echo "Running on branch: ${{ github.event.inputs.feature_branch }}"
-    - name: Setup Java JDK
-      uses: actions/setup-java@v3.14.1
-      with: 
-       java-version: 17
-       distribution: microsoft
-    - name: Get current date
-      id: date
-      run: echo "MY_DATE=$(date +%Y-%m-%d-%H-%M)" >> $GITHUB_ENV
-    - name: Build using Maven
-      run: mvn --batch-mode --update-snapshots verify
-    - run: mkdir staging && cp target/*.jar staging
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v4.6.2
-      with:
-       name: artifact_${{ vars.env_name }}-${{ env.MY_DATE }}
-       path: staging
-    - run: echo 'Staging Environment Secret is ${{secrets.secret}}, Environment Variable is ${{ vars.variable }}'
- User-Acceptance:
-  needs: [Build,Test]
-  runs-on: ubuntu-latest
-  environment: ${{ inputs.UAT_ENVIRONMENT }}
-  steps:
-    - name: Checkout
-      uses: actions/checkout@v4.2.2
-      with:
-          ref: ${{ github.event.inputs.feature_branch }} # Use the input branch
-    - name: Run script on target branch
-      run: |
-          echo "Running on branch: ${{ github.event.inputs.feature_branch }}"
-    - name: Setup Java JDK
-      uses: actions/setup-java@v3.14.1
-      with: 
-       java-version: 17
-       distribution: microsoft
-    - name: Get current date
-      id: date
-      run: echo "MY_DATE=$(date +%Y-%m-%d-%H-%M)" >> $GITHUB_ENV
-    - name: Build using Maven
-      run: mvn --batch-mode --update-snapshots verify
-    - run: mkdir staging && cp target/*.jar staging
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v4.6.2
-      with:
-       name: artifact_${{ vars.env_name }}-${{ env.MY_DATE }}
-       path: staging
-    - run: echo 'Staging Environment Secret is ${{secrets.secret}}, Environment Variable is ${{ vars.variable }}'
-   
-
+      - name: Setup Java JDK
+        uses: actions/setup-java@v3.14.1
+        with:
+          java-version: 17
+          distribution: microsoft
+      - name: Get current date
+        id: date
+        run: echo "MY_DATE=$(date +%Y-%m-%d-%H-%M)" >> $GITHUB_ENV
+      - name: Build using Maven
+        run: mvn --batch-mode --update-snapshots verify
+      - run: mkdir staging && cp target/*.jar staging
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: 'artifact_${{ vars.env_name }}-${{ env.MY_DATE }}'
+          path: staging
+      - run: >-
+          echo 'Staging Environment Secret is ${{secrets.secret}}, Environment
+          Variable is ${{ vars.variable }}'
+  Uat:
+      needs: [Build, Test]
+      runs-on: ubuntu-latest
+      environment: '${{ inputs.UAT_ENVIRONMENT }}'
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4.2.2
+          with:
+            ref: '${{ github.event.inputs.pre-prod_branch }}'
+        - name: Run script on target branch
+          run: >
+            echo "UAT build running on branch: ${{
+            github.event.inputs.pre-prod_branch }}"
+        - name: Setup Java JDK
+          uses: actions/setup-java@v3.14.1
+          with:
+            java-version: 17
+            distribution: microsoft
+        - name: Get current date
+          id: date
+          run: echo "MY_DATE=$(date +%Y-%m-%d-%H-%M)" >> $GITHUB_ENV
+        - name: Build using Maven
+          run: mvn --batch-mode --update-snapshots verify
+        - run: mkdir staging && cp target/*.jar staging
+        - name: Upload a Build Artifact
+          uses: actions/upload-artifact@v4.6.2
+          with:
+            name: 'artifact_${{ vars.env_name }}-${{ env.MY_DATE }}'
+            path: staging
+        - run: >-
+            echo 'UAT Environment Secret is ${{secrets.secret}}, Environment
+            Variable is ${{ vars.variable }}'
+  Prod:
+    needs: [Build, Test, Uat]
+    runs-on: ubuntu-latest
+    environment: '${{ inputs.PROD_ENVIRONMENT }}'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+        with:
+          ref: '${{ github.event.inputs.prod_branch }}'
+      - name: Run script on target branch
+        run: >
+          echo "Prod build running on branch: ${{
+          github.event.inputs.prod_branch }}"
+      - name: Setup Java JDK
+        uses: actions/setup-java@v3.14.1
+        with:
+          java-version: 17
+          distribution: microsoft
+      - name: Get current date
+        id: date
+        run: echo "MY_DATE=$(date +%Y-%m-%d-%H-%M)" >> $GITHUB_ENV
+      - name: Build using Maven
+        run: mvn --batch-mode --update-snapshots verify
+      - run: mkdir staging && cp target/*.jar staging
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: 'artifact_${{ vars.env_name }}-${{ env.MY_DATE }}'
+          path: staging
+      - run: >-
+          echo 'Prod Environment Secret is ${{secrets.secret}}, Environment
+          Variable is ${{ vars.variable }}'
