@@ -6,15 +6,31 @@ on:
    BUILD_ENVIRONMENT:
     type: environment
     default: dev
+   develop_branch:
+    required: true
+    type: string
+    default: 'development'
    TEST_ENVIRONMENT:
     type: environment
     default: staging
+   feature_branch:
+    required: true
+    type: string
+    default: 'feature'
    UAT_ENVIRONMENT:
     type: environment
     default: uat
+   pre-prod_branch:
+    required: true
+    type: string
+    default: 'pre-prod'
    PROD_ENVIRONMENT:
     type: environment
     default: prod
+   prod_branch:
+    required: true
+    type: string
+    default: 'prod'
 
 jobs:
   CI_Non_container_Build:
@@ -23,6 +39,11 @@ jobs:
    steps:
     - name: Checkout
       uses: actions/checkout@v4.2.2
+      with:
+          ref: ${{ github.event.inputs.develop_branch }} # Use the input branch
+    - name: Run script on target branch
+      run: |
+          echo "Running on branch: ${{ github.event.inputs.develop_branch }}"
     - name: Setup Java JDK
       uses: actions/setup-java@v3.14.1
       with: 
