@@ -1,0 +1,42 @@
+name: Multi Stage Pipeline
+
+on:
+ workflow_dispatch:
+  inputs:
+   BUILD_ENVIRONMENT:
+    type: environment
+    default: dev
+   TEST_ENVIRONMENT:
+    type: environment
+    default: staging
+   UAT_ENVIRONMENT:
+    type: environment
+    default: uat
+   PROD_ENVIRONMENT:
+    type: environment
+    default: prod
+
+jobs:
+  CI_Non_container_Build:
+   runs-on: ubuntu-latest
+   environment: ${{ inputs.BUILD_ENVIRONMENT }}
+   steps:
+    - name: Checkout
+      uses: actions/checkout@v4.2.2
+    - name: Setup Java JDK
+      uses: actions/setup-java@v3.14.1
+      with: 
+       java-version: 17
+       distribution: microsoft
+    - name: Get current date
+      id: date
+      run: echo "MY_DATE=$(date +%Y-%m-%d-%H-%M)" >> $GITHUB_ENV
+    - name: Build using Maven
+      run: mvn --batch-mode --update-snapshots verify
+    - run: mkdir staging && cp target/*.jar staging
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v4.6.2
+      with:
+       name: artifact_${{ vars.env_name }}-${{ env.MY_DATE }}
+       path: staging
+    - run: echo 'Environment Secret is ${{secrets.secret}}, Environment Variable is ${{ vars.variable }}'
