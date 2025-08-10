@@ -20,22 +20,39 @@ on:
     default: staging
    feature_branch:
     required: true
-    type: string
     default: 'feature'
+    type: choice
+    options:
+        - development
+        - feature
+        - pre-prod
+        - prod
    UAT_ENVIRONMENT:
     type: environment
     default: uat
    pre-prod_branch:
     required: true
-    type: string
+    #type: string
     default: 'pre-prod'
+    type: choice
+    options:
+        - development
+        - feature
+        - pre-prod
+        - prod
    PROD_ENVIRONMENT:
     type: environment
     default: prod
    prod_branch:
     required: true
-    type: string
+    #type: string
     default: 'prod'
+    type: choice
+    options:
+        - development
+        - feature
+        - pre-prod
+        - prod
 
 jobs:
   CI_Non_container_Build:
