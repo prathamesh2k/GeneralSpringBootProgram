@@ -29,6 +29,6 @@ jobs:
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.6.2
       with:
-       name: artifact-${{ env.MY_DATE }}
+       name: artifact_${{ vars.env_name }}-${{ env.MY_DATE }}
        path: staging
     - run: echo 'Environment Secret is ${{secrets.secret}}, Environment Variable is ${{ vars.variable }}'
