@@ -55,7 +55,7 @@ on:
         - pre-prod
 
 jobs:
-  CI_Non_container_Build:
+  Build:
    runs-on: ubuntu-latest
    environment: ${{ inputs.BUILD_ENVIRONMENT }}
    steps:
@@ -65,7 +65,7 @@ jobs:
           ref: ${{ github.event.inputs.develop_branch }} # Use the input branch
     - name: Run script on target branch
       run: |
-          echo "Running on branch: ${{ github.event.inputs.develop_branch }}"
+          echo "Development build running on branch: ${{ github.event.inputs.develop_branch }}"
     - name: Setup Java JDK
       uses: actions/setup-java@v3.14.1
       with: 
@@ -82,4 +82,64 @@ jobs:
       with:
        name: artifact_${{ vars.env_name }}-${{ env.MY_DATE }}
        path: staging
-    - run: echo 'Environment Secret is ${{secrets.secret}}, Environment Variable is ${{ vars.variable }}'
+    - run: echo 'Development Environment Secret is ${{secrets.secret}}, Environment Variable is ${{ vars.variable }}'
+  Test:
+   needs: Build
+   runs-on: ubuntu-latest
+   environment: ${{ inputs.TEST_ENVIRONMENT }}
+   steps:
+    - name: Checkout
+      uses: actions/checkout@v4.2.2
+      with:
+          ref: ${{ github.event.inputs.feature_branch }} # Use the input branch
+    - name: Run script on target branch
+      run: |
+          echo "Running on branch: ${{ github.event.inputs.feature_branch }}"
+    - name: Setup Java JDK
+      uses: actions/setup-java@v3.14.1
+      with: 
+       java-version: 17
+       distribution: microsoft
+    - name: Get current date
+      id: date
+      run: echo "MY_DATE=$(date +%Y-%m-%d-%H-%M)" >> $GITHUB_ENV
+    - name: Build using Maven
+      run: mvn --batch-mode --update-snapshots verify
+    - run: mkdir staging && cp target/*.jar staging
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v4.6.2
+      with:
+       name: artifact_${{ vars.env_name }}-${{ env.MY_DATE }}
+       path: staging
+    - run: echo 'Staging Environment Secret is ${{secrets.secret}}, Environment Variable is ${{ vars.variable }}'
+ User-Acceptance:
+  needs: [Build,Test]
+  runs-on: ubuntu-latest
+  environment: ${{ inputs.UAT_ENVIRONMENT }}
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4.2.2
+      with:
+          ref: ${{ github.event.inputs.feature_branch }} # Use the input branch
+    - name: Run script on target branch
+      run: |
+          echo "Running on branch: ${{ github.event.inputs.feature_branch }}"
+    - name: Setup Java JDK
+      uses: actions/setup-java@v3.14.1
+      with: 
+       java-version: 17
+       distribution: microsoft
+    - name: Get current date
+      id: date
+      run: echo "MY_DATE=$(date +%Y-%m-%d-%H-%M)" >> $GITHUB_ENV
+    - name: Build using Maven
+      run: mvn --batch-mode --update-snapshots verify
+    - run: mkdir staging && cp target/*.jar staging
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v4.6.2
+      with:
+       name: artifact_${{ vars.env_name }}-${{ env.MY_DATE }}
+       path: staging
+    - run: echo 'Staging Environment Secret is ${{secrets.secret}}, Environment Variable is ${{ vars.variable }}'
+   
+
