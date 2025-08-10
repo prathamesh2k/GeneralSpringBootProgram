@@ -31,4 +31,4 @@ jobs:
       with:
        name: artifact-${{ env.MY_DATE }}
        path: staging
-    - run: echo 'Environment Secret is ${{secrets.secret}}, Environment Variable is ${{ vars.variable }}
+    - run: echo 'Environment Secret is ${{secrets.secret}}, Environment Variable is ${{ vars.variable }}'
