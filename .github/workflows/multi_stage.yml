@@ -8,8 +8,13 @@ on:
     default: dev
    develop_branch:
     required: true
-    type: string
     default: 'development'
+    type: choice
+    options:
+        - development
+        - feature
+        - pre-prod
+        - prod
    TEST_ENVIRONMENT:
     type: environment
     default: staging
