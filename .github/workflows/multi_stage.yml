@@ -23,8 +23,8 @@ on:
     default: 'feature'
     type: choice
     options:
-        - development
         - feature
+        - development
         - pre-prod
         - prod
    UAT_ENVIRONMENT:
@@ -36,9 +36,9 @@ on:
     default: 'pre-prod'
     type: choice
     options:
+        - pre-prod
         - development
         - feature
-        - pre-prod
         - prod
    PROD_ENVIRONMENT:
     type: environment
@@ -49,10 +49,10 @@ on:
     default: 'prod'
     type: choice
     options:
+        - prod
         - development
         - feature
         - pre-prod
-        - prod
 
 jobs:
   CI_Non_container_Build:
